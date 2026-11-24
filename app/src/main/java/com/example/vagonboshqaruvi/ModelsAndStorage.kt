@@ -108,7 +108,7 @@ object TimeCalculator {
 
 object ExcelExporter {
     private fun csvEscape(value: String): String {
-        val clean = value.replace("\"", "\"")
+        val clean = value.replace("\"", "\"\"")
         return "\"$clean\""
     }
 
@@ -294,13 +294,19 @@ class CloudSyncManager(private val storage: LocalStorage) {
         return httpPut("vagon_app/users/$key", gson.toJson(user))
     }
 
-    suspend fun fetchUsers(): List<User>? = try {
-        val raw = httpGet("vagon_app/users") ?: return null
-        if (raw == "null" || raw.isBlank()) emptyList() else {
-            val type = object : TypeToken<Map<String, User>>() {}.type
-            (gson.fromJson<Map<String, User>>(raw, type) ?: emptyMap()).values.toList()
+    suspend fun fetchUsers(): List<User>? {
+        return try {
+            val raw = httpGet("vagon_app/users") ?: return null
+            if (raw == "null" || raw.isBlank()) {
+                emptyList()
+            } else {
+                val type = object : TypeToken<Map<String, User>>() {}.type
+                (gson.fromJson<Map<String, User>>(raw, type) ?: emptyMap()).values.toList()
+            }
+        } catch (_: Exception) {
+            null
         }
-    } catch (_: Exception) { null }
+    }
 
     suspend fun pushRecord(record: WagonRecord): Boolean {
         val key = record.id.ifBlank { System.currentTimeMillis().toString() }
@@ -309,13 +315,19 @@ class CloudSyncManager(private val storage: LocalStorage) {
 
     suspend fun deleteRecord(recordId: String): Boolean = httpDelete("vagon_app/records/$recordId")
 
-    suspend fun fetchRecords(): List<WagonRecord>? = try {
-        val raw = httpGet("vagon_app/records") ?: return null
-        if (raw == "null" || raw.isBlank()) emptyList() else {
-            val type = object : TypeToken<Map<String, WagonRecord>>() {}.type
-            (gson.fromJson<Map<String, WagonRecord>>(raw, type) ?: emptyMap()).values.sortedBy { it.id }
+    suspend fun fetchRecords(): List<WagonRecord>? {
+        return try {
+            val raw = httpGet("vagon_app/records") ?: return null
+            if (raw == "null" || raw.isBlank()) {
+                emptyList()
+            } else {
+                val type = object : TypeToken<Map<String, WagonRecord>>() {}.type
+                (gson.fromJson<Map<String, WagonRecord>>(raw, type) ?: emptyMap()).values.sortedBy { it.id }
+            }
+        } catch (_: Exception) {
+            null
         }
-    } catch (_: Exception) { null }
+    }
 
     suspend fun pushMessage(msg: ChatMessage): Boolean {
         val key = msg.id.ifBlank { System.currentTimeMillis().toString() }
@@ -324,11 +336,17 @@ class CloudSyncManager(private val storage: LocalStorage) {
 
     suspend fun deleteMessage(msgId: String): Boolean = httpDelete("vagon_app/messages/$msgId")
 
-    suspend fun fetchMessages(): List<ChatMessage>? = try {
-        val raw = httpGet("vagon_app/messages") ?: return null
-        if (raw == "null" || raw.isBlank()) emptyList() else {
-            val type = object : TypeToken<Map<String, ChatMessage>>() {}.type
-            (gson.fromJson<Map<String, ChatMessage>>(raw, type) ?: emptyMap()).values.sortedBy { it.id }
+    suspend fun fetchMessages(): List<ChatMessage>? {
+        return try {
+            val raw = httpGet("vagon_app/messages") ?: return null
+            if (raw == "null" || raw.isBlank()) {
+                emptyList()
+            } else {
+                val type = object : TypeToken<Map<String, ChatMessage>>() {}.type
+                (gson.fromJson<Map<String, ChatMessage>>(raw, type) ?: emptyMap()).values.sortedBy { it.id }
+            }
+        } catch (_: Exception) {
+            null
         }
-    } catch (_: Exception) { null }
+    }
 }
